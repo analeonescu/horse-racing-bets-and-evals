@@ -1,6 +1,6 @@
 # Horse Racing Bets & Evals
 
-This is a side project using machine learning models for horse racing prediction, betting strategy evaluation, and comparison against market-implied probabilities.
+This is a side project exploring the use of machine learning for horse racing prediction, betting strategy evaluation, and comparison against market-implied probabilities.
 
 ## Overview
 
@@ -16,20 +16,18 @@ The project combines **feature engineering, probabilistic prediction, model eval
 
 ## Data
 
-The data used in this repo is from [Kaggle](https://www.kaggle.com/datasets/gdaley/hkracing) and contains historical horse racing results and race-level information of the Hong Kong scene, including:
+The data used in this repo is from [Kaggle](https://www.kaggle.com/datasets/gdaley/hkracing) and contains historical horse racing results and race-level information of the Hong Kong racing scene, including:
 
 - Race date and race ID
 - Horse, jockey, and trainer identifiers
 - Race distance
-- Going / track conditions
+- Going/ track conditions
 - Draw
 - Horse weight
 - Field size
 - Finishing position
 - Market odds and implied probabilities
-- Historical horse, jockey, and trainer performance
-- Debut indicators
-- Historical win rates
+- Win rates
 
 Historical features are constructed using only information available **before the race**, with the aim of avoiding data leakage.
 
@@ -45,11 +43,13 @@ Examples include:
 - Prior number of races for a jockey
 - Prior number of races for a trainer
 - Prior win rates
-- Debut indicators
-- Race-level normalization
+- Debut indicators, distinguishing horses with no prior racing history from horses with an established record
+- Race-level normalisation
 - Encoded categorical variables such as going and horse gear
 
-A key consideration is avoiding **data leakage**: information from a horse's current or future races should not be available when generating its prediction. This includes both raw features, a well as encodings - if a feature type is in the test set but not in the trainign set, the model will not have learned how to represent or interpret that category.
+A key consideration is avoiding **data leakage**, i.e. information from a horse's current or future races should not be available when generating its prediction. For example, historical win rates and race counts must be calculated using only races that occurred before the prediction race.
+
+Categorical encoding also needs to be handled carefully. Encoders should be fitted on the training data and then applied consistently to validation and test data. If a category appears in the test set that was not present during training, the model will not have learned how to represent that category, so the encoding strategy needs to define how previously unseen categories are handled.
 
 ### 2. Predictive modelling
 
@@ -60,21 +60,10 @@ The repository experiments with several modelling approaches, including:
 - Ranking-oriented approaches
 - Market-implied probability baselines
 
-The primary prediction target is whether a horse wins its race.
-
-Because exactly one horse wins each race, model outputs can also be normalized within each race so that predicted probabilities sum to one.
-
-The main metrics include:
-
-- **Log loss** — evaluates the quality of probabilistic predictions
-- **Brier score** — measures the accuracy of predicted probabilities
-- **Top-1 accuracy** — proportion of races where the model's highest-probability horse wins
-- **Calibration** — compares predicted probabilities with observed win frequencies
-
-Calibration is particularly important for this problem because a model can rank horses reasonably well while still producing poorly calibrated probabilities.
+The primary prediction target is whether a horse wins its race. Because exactly one horse wins each race, model outputs can also be normalized within each race so that predicted probabilities sum to one.
 
 
-### 3. Market comparison
+### 3. Evaluation and market comparison
 
 A central part of the project is comparing model predictions against the betting market.
 
@@ -104,24 +93,13 @@ The models are evaluated using both standard predictive metrics and betting-orie
 
 The main metrics include:
 
-- **Log Loss** - evaluates the quality of probabilistic predictions
-- **Brier Score** - measures the accuracy of predicted probabilities
-- **Top-1 Accuracy** - proportion of races where the model's highest-probability horse wins
-- **Calibration** - compares predicted probabilities with observed win frequencies. Calibration is particularly important for this problem because a model can rank horses reasonably well while still producing poorly calibrated probabilities.
+- **Log loss (or cross-entropy)** - evaluates the quality of probabilistic predictions by penalising incorrect predictions, with a particularly strong penalty for predictions that are confidently wrong. This makes it useful for assessing whether the model is assigning high probabilities to horses that actually win, rather than simply identifying the most likely winner.
+- **Brier score** - measures the mean squared difference between predicted probabilities and the actual outcomes. Unlike top-1 accuracy, it evaluates the full probability estimate, rewarding predictions that are both accurate and appropriately confident.
+- **Top-1 accuracy** - measures the proportion of races in which the horse assigned the highest predicted probability by the model actually wins. This provides a simple measure of how often the model correctly identifies the winner, but does not assess the quality or calibration of the underlying probabilities.
+- **Calibration** - evaluates whether predicted probabilities correspond to observed win frequencies. For example, among horses predicted to have a 20% chance of winning, approximately 20% should actually win if the model is well calibrated. This is particularly important for the betting component, since identifying a horse as the most likely winner is different from accurately estimating its probability of winning.
 
-### 2. Market Performance
 
-Model predictions are also compared against market-implied probabilities.
-
-The main quantity of interest is the difference between the model probability and the market probability:
-
-```
-edge = model probability - market probability
-```
-
-This is used to investigate whether the model identifies horses that appear under- or over-valued by the market.
-
-### 3. Betting Strategy
+### 2. Betting Strategy
 
 Prediction accuracy and betting profitability are treated as separate questions.
 
@@ -140,7 +118,7 @@ The betting analysis therefore evaluates strategies based on different levels of
 
 Where possible, betting strategies are evaluated on held-out data rather than the data used to train the model.
 
-### 4. Calibration
+### 3. Calibration
 
 A key diagnostic is a calibration curve comparing:
 
@@ -157,7 +135,7 @@ predicted probability ≈ observed win frequency
 
 This is particularly important because the betting analysis relies on the probabilities themselves, rather than simply ranking horses.
 
-### 5. Validation
+### 4. Validation
 
 Horse racing is a temporal prediction problem, so validation should reflect how the model would actually be used.
 
@@ -167,10 +145,9 @@ Future iterations of the project will focus on time-based splits and walk-forwar
 
 ## Results
 
-Results will be added as the modelling and evaluation pipeline develops. They can be easily reproduced using the EDA in the notebooks.
+Results will be added as the modelling and evaluation pipeline develops. The notebooks contain the exploratory analysis and modelling workflows used to generate these results.
 
-
-## Project Structure
+## Project structure
 
 ```
 horse-racing-bets-and-evals/
@@ -182,7 +159,7 @@ horse-racing-bets-and-evals/
 ├── src/
 │   └── ...
 ├── models/
-│   └── tests/
+│   ├── tests/
 |   └── ...
 ├── results/
 │   └── ...
@@ -190,17 +167,25 @@ horse-racing-bets-and-evals/
 └── README.md
 ```
 
+## Reproducing the Analysis
 
-## Current Models
+The analysis is implemented in Python. The notebooks contain the exploratory data analysis, feature engineering, model training, and evaluation workflows.
+
+To set up the environment:
+
+```bash
+pip install -r requirements.txt
+
+
+## Current models
 
 | Model | Purpose |
 |---|---|
 | Logistic Regression | Simple probabilistic baseline |
 | XGBoost | Non-linear tree-based model |
 | Market Probabilities | Benchmark against the existing betting market |
-| Ranking Models | Explore the problem as a within-race ranking task |
 
-## Key Questions
+## Key questions
 
 Some of the questions I am interested in exploring through this project are:
 
@@ -218,26 +203,27 @@ There are several important limitations to this analysis:
 - As with any time-seris forecasting taks, historical performance does not guarantee future performance.
 - The betting market provides a strong baseline and may already incorporate much of the available information.
 - Apparent betting profits can result from statistical noise or overfitting.
-- Results can be sensitive to how the train/test split is constructed. A safer approach is to further split the training set into training and validation (e.g. in a 80:20 ratio).
+- Results can be sensitive to how the train/test split is constructed. A safer approach is to further split the training set into training and validation (e.g. in a 80:20 ratio, making sure data doesn't leak from the validation set).
 - Real-world betting involves factors such as changing odds, bookmaker limits, liquidity, and transaction costs.
 - Repeated experimentation and model selection can lead to overfitting to the evaluation dataset.
 
 For these reasons, any apparent profitability should be interpreted cautiously and evaluated on genuinely out-of-sample data.
 
-## Future Work
+## Future work
 
 Potential extensions include:
 
-- Hierarchical horse / jockey / trainer effects, and measuring whether uing less data classes changes the performance
-- Walk-forward validation
-- Additional gradient-boosting models (e.g. LightGBM, CatBoost, etc.)
-- Bootstrap confidence intervals for betting returns
-- Testing whether model edge persists after accounting for the bookmaker's overround
-- Evaluating whether model performance is robust across different time periods
+- [ ] Hierarchical horse / jockey / trainer effects, and investigating whether reducing the number of feature classes improves generalisation
+- [ ] Investigate whether reducing the number of feature classes improves generalisation
+- [ ] Walk-forward validation
+- [ ] Additional gradient-boosting models (e.g. LightGBM, CatBoost)
+- [ ] Bootstrap confidence intervals for betting returns
+- [ ] Test whether model edge persists after accounting for the bookmaker's overround
+- [ ] Evaluate whether model performance is robust across different time periods
 
-## Long Term Work
+## Long-term work
 
-A few more exploratory, higher-effort directions beyond the near-term items above:
+A few more exploratory, higher-effort directions beyond the near-term items above include:
 
 - Using an LLM to clean and standardize feature categories. Several categorical fields in this dataset are inconsistent in ways that are hard to fix with fixed lookup rules:
   - Geographic fields mix granularity — some entries are countries, others are specific cities or local venues, which currently need to be manually aggregated to be usable as a single consistent feature.
@@ -250,6 +236,6 @@ A few more exploratory, higher-effort directions beyond the near-term items abov
 
 This is an independent project for educational purposes.
 
-All code is writen by me, I only used GenAI to help me with quicker synthax match, troubleshooting and semantic normalisation.
+The code is written by me, with GenAI used for syntax assistance, troubleshooting, and some semantic normalisation tasks.
 
 Historical model performance and simulated betting returns are not indicative of future results. Nothing in this repository constitutes financial or betting advice.
