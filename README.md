@@ -177,6 +177,13 @@ To set up the environment:
 pip install -r requirements.txt
 ```
 
+The main modelling pipeline can be run from the repository root with:
+
+```bash
+python -m scripts.run_pipeline
+```
+
+
 ## Current models
 
 | Model | Purpose |
