@@ -219,3 +219,4 @@ __marimo__/
 
 # others
 data/*.csv
+notebooks/*old*
