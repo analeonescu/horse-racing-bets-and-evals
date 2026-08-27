@@ -175,7 +175,7 @@ To set up the environment:
 
 ```bash
 pip install -r requirements.txt
-
+```
 
 ## Current models
 
