@@ -1,6 +1,6 @@
 # Horse Racing Bets & Evals
 
-This is a ide project exploring using machine learning models for horse racing prediction, betting strategy evaluation, and comparison against market-implied probabilities.
+This is a side project using machine learning models for horse racing prediction, betting strategy evaluation, and comparison against market-implied probabilities.
 
 ## Overview
 
