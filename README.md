@@ -149,22 +149,27 @@ Results will be added as the modelling and evaluation pipeline develops. The not
 
 ## Project structure
 
-```
+```text
 horse-racing-bets-and-evals/
 │
-├── data/
-│   └── ...
-├── notebooks/
-│   └── ...
-├── src/
-│   └── ...
-├── models/
-│   ├── tests/
-|   └── ...
-├── results/
-│   └── ...
-├── requirements.txt
-└── README.md
+├── configs/            # Experiment and model configuration
+├── data/               # Raw and processed data
+├── notebooks/          # Exploratory analysis and visualisation
+├── src/                # Core Python implementation
+│   ├── data.py         # Data loading and splitting
+│   ├── features.py     # Feature engineering
+│   ├── models.py       # Model training and prediction
+│   ├── evaluation.py   # Model evaluation and calibration
+│   ├── betting.py      # Market and betting analysis
+│   └── tests/          # Unit tests for the Python modules
+├── scripts/
+│   └── run_pipeline.py # End-to-end analysis scripts
+│
+├── .gitattributes
+├── .gitignore
+├── LICENSE
+├── README.md
+└── requirements.txt
 ```
 
 ## Reproducing the Analysis
